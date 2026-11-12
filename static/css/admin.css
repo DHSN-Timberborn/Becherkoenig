@@ -57,6 +57,9 @@ html[data-theme],
     --object-tools-hover-bg: var(--button-hover-bg);
 }
 .theme-toggle { display: none; }
+/* Hauptknopf „Sichern“ hat --default-button-bg (= Textfarbe); Django nimmt für die Schrift --button-fg (für --ac gedacht).
+   Deshalb hier die Kartenfarbe als Schrift – sonst im Dunkelmodus weiß auf hell. */
+.submit-row input.default, input[type=submit].default { color: var(--sf); }
 
 /* Kopf */
 #header { padding: 14px 32px; border-bottom: 4px solid var(--ac); }
