@@ -86,7 +86,8 @@ def unbezahlte_auf_warteliste(turnier, request):
     if not turnier.meldeschluss_vorbei:
         return [], []
     verschoben = []
-    for team in turnier.unbezahlte_teams():
+    # Von Hand bestätigte Teams („zahlen vor Ort“) behalten ihren Platz
+    for team in turnier.unbezahlte_teams().filter(status=Team.Status.ANGEMELDET):
         vorher = timezone.localtime(team.angemeldet_am)
         team.status = Team.Status.WARTELISTE
         # Ans Ende stellen – sonst stünden sie wegen der frühen Anmeldung ganz vorn

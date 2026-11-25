@@ -217,7 +217,7 @@ def _speichern(turnier, gruppen_teams, partien, ko_slots, start):
 
 @transaction.atomic
 def erzeugen(turnier, anzahl_gruppen=None, zufall=None):
-    """Neuen Spielplan aus allen bestätigten und bezahlten Teams erzeugen (ersetzt den alten)."""
+    """Neuen Spielplan aus allen bestätigten Teams erzeugen (ersetzt den alten)."""
     if turnier.spiele.filter(status=Spiel.Status.BEENDET).exists():
         raise SpielplanFehler("Es gibt schon Ergebnisse – der Plan kann nicht mehr neu erzeugt werden.")
     if not turnier.beginn:

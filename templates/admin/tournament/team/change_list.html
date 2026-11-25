@@ -13,15 +13,17 @@
 <div class="uebersicht">
   {% if not uebersicht_turnier.kostenlos %}
   <div><span>Startgebühren eingegangen</span><strong>{{ uebersicht.eingegangen|floatformat:"-2" }} €</strong>von {{ uebersicht.erwartet|floatformat:"-2" }} € erwartet</div>
-  <div><span>Unbezahlt</span><strong>{{ uebersicht.unbezahlt }}</strong>Teams mit Startplatz
+  <div><span>Unbezahlt</span><strong>{{ uebersicht.unbezahlt }}</strong>Teams mit Startplatz{% if uebersicht.vor_ort %}, davon {{ uebersicht.vor_ort }} bestätigt (zahlt vor Ort){% endif %}
     {% if uebersicht.unbezahlt and not uebersicht_turnier.vorbei %}
       {% if uebersicht_turnier.meldeschluss_vorbei %}
+        {% if uebersicht.zurueckstufen %}
         <form method="post" action="{% url 'admin:tournament_team_unbezahlte_auf_warteliste' uebersicht_turnier.pk %}" class="nachruecken"
-              onsubmit="return confirm('{{ uebersicht.unbezahlt }} unbezahlte(s) Team(s) ans Ende der Warteliste setzen? Die Teams bekommen eine Mail.');">
+              onsubmit="return confirm('{{ uebersicht.zurueckstufen }} unbezahlte(s) Team(s) ans Ende der Warteliste setzen? Die Teams bekommen eine Mail.');">
           {% csrf_token %}
-          <button type="submit" class="button">{{ uebersicht.unbezahlt }} auf die Warteliste setzen</button>
-          <small>Meldeschluss vorbei · ihre Plätze gehen an die Warteliste</small>
+          <button type="submit" class="button">{{ uebersicht.zurueckstufen }} auf die Warteliste setzen</button>
+          <small>Meldeschluss vorbei · ihre Plätze gehen an die Warteliste{% if uebersicht.vor_ort %} (bestätigte bleiben){% endif %}</small>
         </form>
+        {% endif %}
       {% else %}
         <form method="post" action="{% url 'admin:tournament_team_an_zahlung_erinnern' uebersicht_turnier.pk %}" class="nachruecken">
           {% csrf_token %}

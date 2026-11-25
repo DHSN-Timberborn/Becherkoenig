@@ -72,7 +72,8 @@ in `.env`-Dateien schreibt es jeden Wert in Anführungszeichen, weil Compose `$`
     (`Zeile.getroffen`), direkter Vergleich. Bester Gruppenzweiter analog pro Spiel (`ko._schnitt`).
 - Paarungen per Kreismethode. Ungerade Teamzahl → "spielfrei" (bei einer Gruppe pfeift das spielfreie Team).
   2 Felder, kein Team doppelt im selben Slot.
-- Nur bestätigte **und** bezahlte Teams kommen in den Spielplan (`Team.objects.im_spielplan()`).
+- Alle **bestätigten** Teams kommen in den Spielplan (`Team.objects.im_spielplan()`) – bestätigt durch Zahlung oder
+  von Hand durch die Orga (z. B. „zahlt vor Ort“).
 - **Startgebühr pro Team oder pro Person** (`Turnier.gebuehr_pro_person`, Vorgabe pro Team): Was ein Team zahlt, steht in
   `Team.startgebuehr` (pro Person: Betrag × aktuell eingetragene Spieler, `Team.anzahl_spieler` nutzt `_anzahl_spieler`
   aus `.annotate()`), Text für Mails `Team.startgebuehr_text`, Einheit für Startseite/Anmeldung `Turnier.gebuehr_einheit`.
@@ -87,7 +88,9 @@ in `.env`-Dateien schreibt es jeden Wert in Anführungszeichen, weil Compose `$`
   Startplatz neu berechnet. Tests, die die Bezahl-Logik prüfen, brauchen deshalb eine Gebühr > 0.
 - Team-Status: Anmeldung → `angemeldet` (Platz frei) oder `warteliste` (voll).
   **Bezahlt = bestätigt:** Setzt die Orga `bezahlt`, wird ein angemeldetes Team automatisch
-  `bestaetigt` (in `Team.save()`); wird `bezahlt` zurückgenommen, wieder `angemeldet`.
+  `bestaetigt` (in `Team.save()`); wird `bezahlt` zurückgenommen, wieder `angemeldet`. Die Orga kann auch ohne
+  Zahlung von Hand `bestaetigt` setzen – das bleibt (Zahlung bleibt offen, Erinnerungen ja, aber „unbezahlte auf die
+  Warteliste“ verschiebt nur `angemeldet`). Führt die Orga eine Gebühr neu ein, setzt der Admin `team.gebuehr_neu`.
   Warteliste und Absage ändert das nicht. Kapitän kann bis Meldeschluss abmelden (`abgesagt`).
   Warteliste in Anmelde-Reihenfolge (`Team.angemeldet_am`, dann pk; `Team.REIHENFOLGE`, `wartelisten_platz`).
   Neue Anmeldungen stellen sich hinten an, solange jemand wartet (`Turnier.neue_auf_warteliste`).

@@ -143,7 +143,7 @@ class SpielplanBasis(TestCase):
 class SpielplanDbTests(SpielplanBasis):
     def test_gruppen_ko_mit_zehn_teams(self):
         self.teams(10)
-        self.teams(1, bezahlt=False)  # nicht bezahlt -> nicht im Plan
+        self.teams(1, bezahlt=False, status=Team.Status.ANGEMELDET)  # nicht bestätigt -> nicht im Plan
         spielplan.erzeugen(self.t, zufall=random.Random(3))
 
         self.assertEqual(self.t.gruppen.count(), 2)

@@ -70,12 +70,30 @@ class TeamTests(TestCase):
         with self.assertRaises(IntegrityError):
             team(self.t, "Bit Blockers")
 
-    def test_nur_bestaetigte_und_bezahlte_teams_im_spielplan(self):
-        ok = team(self.t, "Bestätigt + bezahlt", status=Team.Status.BESTAETIGT, bezahlt=True)
-        team(self.t, "Bestätigt, offen", status=Team.Status.BESTAETIGT)
+    def test_alle_bestaetigten_teams_im_spielplan(self):
+        bezahlt = team(self.t, "Bestätigt + bezahlt", status=Team.Status.BESTAETIGT, bezahlt=True)
+        vor_ort = team(self.t, "Bestätigt, zahlt vor Ort", status=Team.Status.BESTAETIGT)
         team(self.t, "Angemeldet, offen")
         team(self.t, "Warteliste", status=Team.Status.WARTELISTE, bezahlt=True)
-        self.assertEqual(list(Team.objects.im_spielplan()), [ok])
+        self.assertEqual(list(Team.objects.im_spielplan().order_by("pk")), [bezahlt, vor_ort])
+
+    def test_orga_bestaetigt_ohne_zahlung(self):
+        tm = team(self.t, "Zahlt vor Ort")
+        tm.status = Team.Status.BESTAETIGT  # von Hand im Admin
+        tm.save()
+        tm.refresh_from_db()
+        self.assertEqual((tm.status, tm.bezahlt), (Team.Status.BESTAETIGT, False))
+        tm.save()  # erneutes Speichern ändert nichts
+        tm.refresh_from_db()
+        self.assertEqual(tm.status, Team.Status.BESTAETIGT)
+        self.assertIn(tm, self.t.unbezahlte_teams())  # Zahlung bleibt offen
+
+    def test_bezahlt_zuruecknehmen_setzt_auf_angemeldet(self):
+        tm = team(self.t, "Bit Blockers", bezahlt=True)
+        tm.bezahlt = False
+        tm.save()
+        tm.refresh_from_db()
+        self.assertEqual(tm.status, Team.Status.ANGEMELDET)
 
     def test_bezahlt_bestaetigt_das_team(self):
         tm = team(self.t, "Bit Blockers")
