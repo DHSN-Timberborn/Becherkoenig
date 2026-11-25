@@ -3,6 +3,8 @@ from collections import defaultdict
 
 from django.conf import settings
 from django.contrib import admin, messages
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import HttpResponse
@@ -23,6 +25,28 @@ def _mail_hinweis(team):
 admin.site.site_header = f"{settings.MARKE} – Orga"
 admin.site.site_title = settings.MARKE
 admin.site.index_title = "Turnierverwaltung"
+
+
+class OrgaUserAdmin(UserAdmin):
+    """Neue Konten entstehen nur per Einladung (Orga → Benutzer & Rollen) – „hinzufügen“ führt dorthin.
+    Bestehende Konten lassen sich hier weiter im Detail bearbeiten."""
+    def add_view(self, request, form_url="", extra_context=None):
+        return redirect("orga_einladen")
+
+
+class OrgaGroupAdmin(GroupAdmin):
+    """Rollen (Gruppen) nur über das Formular mit Bausteinen ändern, damit Checkboxen und Rechte zusammenpassen."""
+    def add_view(self, request, form_url="", extra_context=None):
+        return redirect("orga_rolle_neu")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        return redirect("orga_rolle", pk=object_id)
+
+
+admin.site.unregister(User)
+admin.site.register(User, OrgaUserAdmin)
+admin.site.unregister(Group)
+admin.site.register(Group, OrgaGroupAdmin)
 
 
 class GruppeInline(admin.TabularInline):
@@ -71,6 +95,7 @@ class TurnierAdmin(admin.ModelAdmin):
             # Gebühr auf 0 gesetzt: angemeldete Teams sind bestätigt; Gebühr eingeführt: unbezahlte wieder angemeldet
             for team in obj.teams.filter(status__in=[Team.Status.ANGEMELDET, Team.Status.BESTAETIGT]):
                 team.turnier = obj
+                team.gebuehr_neu = not obj.kostenlos  # neue Gebühr: auch von Hand bestätigte müssen erst zahlen
                 team.save()
         if change and "mit_schiri" in form.changed_data and obj.spiele.exists():
             if obj.mit_schiri:

@@ -67,6 +67,22 @@ class UnbezahltNachMeldeschlussTests(TestCase):
         self.assertIn("Platz 2 der Warteliste", m.body)
         self.assertContains(r, "Nachrücken: Wartend")  # Haken aus: Orga holt den Ersten per Knopf
 
+    def test_von_hand_bestaetigt_bleibt_beim_zurueckstufen(self):
+        self.t.max_teams = 3
+        self.t.save()
+        vor_ort = self.team("VorOrt")
+        vor_ort.status = Team.Status.BESTAETIGT  # Orga: zahlt am Turniertag
+        vor_ort.save()
+        self.meldeschluss_vorbei()
+        r = self.kacheln()
+        self.assertContains(r, "davon 1 bestätigt (zahlt vor Ort)")
+        self.assertContains(r, "1 auf die Warteliste setzen")  # nur „Offen“, nicht „VorOrt“
+        self.zurueckstufen()
+        vor_ort.refresh_from_db()
+        self.offen.refresh_from_db()
+        self.assertEqual((vor_ort.status, self.offen.status), (Team.Status.BESTAETIGT, Team.Status.WARTELISTE))
+        self.assertIn(vor_ort, Team.objects.im_spielplan())
+
     def test_mit_haken_rueckt_der_erste_wartende_sofort_nach(self):
         self.meldeschluss_vorbei()
         self.t.warteliste_automatisch = True
