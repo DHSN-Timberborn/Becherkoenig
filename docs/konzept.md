@@ -173,7 +173,7 @@ So wenig Daten wie möglich: Name der Spieler, eine E-Mail pro Team. Keine Telef
 | Satzpunkte | Nicht einzeln speichern | Spiel hat nur `saetze_a/b` und `punkte_a/b` (Ballpunkt-Summe) |
 | K.-o.-Spiele vorab | Teams optional, Platzhalter-Text | Felder `platzhalter_a/b` am Spiel, z. B. "1. Gruppe B" |
 | Spielernamen | Öffentlich in der Teamliste | Hinweis im Anmeldeformular |
-| Bestätigung | Bezahlt = bestätigt | Haken "bezahlt" setzt Status automatisch auf bestätigt |
+| Bestätigung | Bezahlt = bestätigt, Orga kann auch ohne Zahlung bestätigen | Haken "bezahlt" setzt Status automatisch auf bestätigt; „bestätigt“ von Hand bleibt, z. B. wenn vor Ort gezahlt wird – solche Teams kommen in den Spielplan und nicht auf die Warteliste, die Zahlung bleibt als offen markiert |
 | Besondere Runden | Erkennbar | Feld `phase` am Spiel (Viertelfinale, Halbfinale, Spiel um Platz 3, Finale) |
 | Team löschen | Auch mit geplanten Spielen | Spielplan wird danach automatisch neu erzeugt (Schritt 4) |
 | Warteliste | Orga entscheidet per Klick, optional automatisch | Reihenfolge nach Anmeldung; Haken „Warteliste automatisch nachrücken lassen“ pro Turnier; Mail an das nachgerückte Team |

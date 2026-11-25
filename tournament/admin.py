@@ -71,6 +71,7 @@ class TurnierAdmin(admin.ModelAdmin):
             # Gebühr auf 0 gesetzt: angemeldete Teams sind bestätigt; Gebühr eingeführt: unbezahlte wieder angemeldet
             for team in obj.teams.filter(status__in=[Team.Status.ANGEMELDET, Team.Status.BESTAETIGT]):
                 team.turnier = obj
+                team.gebuehr_neu = not obj.kostenlos  # neue Gebühr: auch von Hand bestätigte müssen erst zahlen
                 team.save()
         if change and "mit_schiri" in form.changed_data and obj.spiele.exists():
             if obj.mit_schiri:

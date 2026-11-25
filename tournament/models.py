@@ -203,7 +203,8 @@ class Turnier(models.Model):
         return not self.startgebuehr_eur
 
     def unbezahlte_teams(self):
-        """Teams mit Startplatz, deren Startgebühr noch fehlt – in Anmelde-Reihenfolge (ohne Gebühr keine)."""
+        """Teams mit Startplatz, deren Startgebühr noch fehlt – in Anmelde-Reihenfolge (ohne Gebühr keine).
+        Enthält auch von Hand bestätigte Teams (sie bekommen Erinnerungen, rutschen aber nicht auf die Warteliste)."""
         if self.kostenlos:
             return self.teams.none()
         return self.teams.filter(status__in=Team.STARTPLATZ_STATUS, bezahlt=False).order_by(*Team.REIHENFOLGE)
@@ -231,6 +232,11 @@ class Turnier(models.Model):
             "eingegangen": sum((t.startgebuehr for t in bezahlt), Decimal(0)),
             "erwartet": sum((t.startgebuehr for t in startplatz), Decimal(0)),
             "unbezahlt": 0 if self.kostenlos else sum(1 for t in startplatz if not t.bezahlt),
+            # davon von der Orga ohne Zahlung bestätigt („zahlt vor Ort“) – die rutschen nicht auf die Warteliste
+            "vor_ort": 0 if self.kostenlos else sum(1 for t in startplatz if not t.bezahlt
+                                                    and t.status == Team.Status.BESTAETIGT),
+            "zurueckstufen": 0 if self.kostenlos else sum(1 for t in startplatz if not t.bezahlt
+                                                          and t.status == Team.Status.ANGEMELDET),
             "warteliste": sum(1 for t in teams if t.status == Team.Status.WARTELISTE),
         }
 
@@ -296,10 +302,9 @@ class Gruppe(models.Model):
 
 class TeamQuerySet(models.QuerySet):
     def im_spielplan(self):
-        """Nur bestätigte und bezahlte Teams kommen in den Spielplan (ohne Startgebühr: alle bestätigten)."""
-        return self.filter(status=Team.Status.BESTAETIGT).filter(
-            models.Q(bezahlt=True) | models.Q(turnier__startgebuehr_eur=0),
-        )
+        """Alle bestätigten Teams kommen in den Spielplan – bestätigt wird durch Zahlung oder von Hand durch die Orga
+        (z. B. „zahlt vor Ort“)."""
+        return self.filter(status=Team.Status.BESTAETIGT)
 
 
 class Team(models.Model):
@@ -347,14 +352,18 @@ class Team(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # Bezahlt heißt bestätigt (Entscheidung Orga) – ohne Startgebühr ist ein Startplatz sofort bestätigt.
+        # Bezahlt heißt bestätigt – ohne Startgebühr ist ein Startplatz sofort bestätigt. Die Orga darf ein Team auch
+        # ohne Zahlung von Hand bestätigen (z. B. „zahlt vor Ort“); das bleibt so. Zurück auf „angemeldet“ nur, wenn
+        # „bezahlt“ zurückgenommen wird oder die Orga eine Startgebühr neu einführt (gebuehr_neu, siehe Admin).
         # Warteliste und Absage bleiben unberührt.
         self.bezahlt_am = (self.bezahlt_am or timezone.localdate()) if self.bezahlt else None
         if self.bezahlt or self.turnier.kostenlos:
             if self.status == self.Status.ANGEMELDET:
                 self.status = self.Status.BESTAETIGT
         elif self.status == self.Status.BESTAETIGT:
-            self.status = self.Status.ANGEMELDET
+            war_bezahlt = self.pk and Team.objects.filter(pk=self.pk, bezahlt=True).exists()
+            if war_bezahlt or getattr(self, "gebuehr_neu", False):
+                self.status = self.Status.ANGEMELDET
         super().save(*args, **kwargs)
 
     @property

@@ -27,7 +27,7 @@ class TeamAdminZahlungTests(TestCase):
 
     def test_zahlungsuebersicht(self):
         self.assertEqual(self.t.zahlungsuebersicht(), {
-            "eingegangen": 20, "erwartet": 40, "unbezahlt": 1, "warteliste": 1,
+            "eingegangen": 20, "erwartet": 40, "unbezahlt": 1, "vor_ort": 0, "zurueckstufen": 1, "warteliste": 1,
         })
 
     def test_liste_zeigt_kennzahlen(self):
