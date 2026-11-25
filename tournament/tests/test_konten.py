@@ -229,3 +229,16 @@ class KeinZugriffUndZugangslinkTests(TestCase):
         boss = User.objects.create_superuser("boss", "b@example.de", PASSWORT)
         self.client.force_login(self.verwalter)
         self.assertEqual(self.client.post(reverse("orga_zugangslink", args=[boss.pk])).status_code, 403)
+
+
+class AdminFuehrtZuDenOrgaFormularenTests(TestCase):
+    def test_hinzufuegen_im_admin_fuehrt_zu_einladung_und_rollen_formular(self):
+        self.client.force_login(User.objects.create_superuser("orga", "o@example.de", PASSWORT))
+        self.assertRedirects(self.client.get(reverse("admin:auth_user_add")), reverse("orga_einladen"),
+                             fetch_redirect_response=False)
+        self.assertRedirects(self.client.get(reverse("admin:auth_group_add")), reverse("orga_rolle_neu"))
+        kasse = rolle("Kasse", "teams")
+        self.assertRedirects(self.client.get(reverse("admin:auth_group_change", args=[kasse.pk])),
+                             reverse("orga_rolle", args=[kasse.pk]))
+        lena = konto("lena@example.de", kasse)
+        self.assertEqual(self.client.get(reverse("admin:auth_user_change", args=[lena.pk])).status_code, 200)
